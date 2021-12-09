@@ -19,22 +19,6 @@ objet3d obj[nb_obj];
 const int nb_text = 2;
 text text_to_draw[nb_text];
 
-//Transformation des modeles
-transformation transformation_model_1;
-transformation transformation_model_2;
-transformation transformation_model_3;
-
-//Transformation de la vue (camera)
-transformation transformation_view;
-
-//Matrice de projection
-mat4 projection;
-
-//angle de deplacement
-float angle_x_model_1 = 0.0f;
-float angle_y_model_1 = 0.0f;
-float angle_view = 0.0f;
-
 /*****************************************************************************\
 * initialisation                                                              *
 \*****************************************************************************/
@@ -102,35 +86,41 @@ static void keyboard_callback(unsigned char key, int, int)
       break;
 
     case 'o':
-      transformation_model_1.rotation_center.x += d_angle;
+      (obj)->tr.rotation_center.x += d_angle;
       break;
     case 'l':
-      transformation_model_1.rotation_center.x -= d_angle;
+      (obj)->tr.rotation_center.x -= d_angle;
       break;
 
     case 'k':
-      angle_y_model_1 += d_angle;
+      (obj)->tr.rotation_center.y += d_angle;
       break;
     case 'm':
-      angle_y_model_1 -= d_angle;
+      (obj)->tr.rotation_center.y -= d_angle;
       break;
 
 
-    case 's':
-      angle_view += d_angle;
-      break;
-    case 'f':
-      angle_view -= d_angle;
-      break;
-
-
-    case 'e':
-      transformation_view.translation.z += dz;
-      break;
-    case 'd':
-      transformation_view.translation.z -= dz;
-      break;
+    //case 's':
+    //  angle_view += d_angle;
+    //  break;
+    //case 'f':
+    //  angle_view -= d_angle;
+    //  break;
+//
+//
+    //case 'e':
+    //  transformation_view.translation.z += dz;
+    //  break;
+    //case 'd':
+    //  transformation_view.translation.z -= dz;
+    //  break;
   }
+  // Exemple camera troisieme personne :
+    //(obj+1)->rotation_center = vec3();
+    //vec3 target = obj.->translation + vec3(0.,-0.5,-2.);
+    //vec3 pos_camera = target - obj->tr.rotation * vec3(0., -3., 5.)  ;
+    //(obj+1)->tr.rotation = matrice_lookat(pos_camera, target, vec3(0., 1., 0.));
+    //(obj+1)->.tr.translation = extract_translation((obj+1)->tr.rotation);
 }
 
 /*****************************************************************************\
@@ -142,16 +132,16 @@ static void special_callback(int key, int, int)
   switch (key)
   {
     case GLUT_KEY_UP:
-      transformation_model_1.translation.y += dL; //rotation avec la touche du haut
+      (obj)->tr.translation.y += dL; //rotation avec la touche du haut
       break;
     case GLUT_KEY_DOWN:
-      transformation_model_1.translation.y -= dL; //rotation avec la touche du bas
+      (obj)->tr.translation.y -= dL; //rotation avec la touche du bas
       break;
     case GLUT_KEY_LEFT:
-      transformation_model_1.translation.x -= dL; //rotation avec la touche de gauche
+      (obj)->tr.translation.x -= dL; //rotation avec la touche de gauche
       break;
     case GLUT_KEY_RIGHT:
-      transformation_model_1.translation.x += dL; //rotation avec la touche de droite
+      (obj)->tr.translation.x += dL; //rotation avec la touche de droite
       break;
   }
 }

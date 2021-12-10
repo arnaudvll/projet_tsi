@@ -13,7 +13,7 @@ GLuint gui_program_id;
 
 camera cam;
 
-const int nb_obj = 3;
+const int nb_obj = 4;
 objet3d obj[nb_obj];
 
 const int nb_text = 2;
@@ -71,8 +71,8 @@ static void init()
 \*****************************************************************************/
 static void keyboard_callback(unsigned char key, int, int)
 {
-  float d_angle=0.1f;
-  float dz=0.5f;
+  float d_angle=0.01f;
+  float dz=0.05f;
 
   switch (key)
   {
@@ -85,42 +85,47 @@ static void keyboard_callback(unsigned char key, int, int)
       exit(0);
       break;
 
-    case 'o':
-      (obj)->tr.rotation_center.x += d_angle;
-      break;
-    case 'l':
-      (obj)->tr.rotation_center.x -= d_angle;
-      break;
+
 
     case 'k':
-      (obj)->tr.rotation_center.y += d_angle;
+      (obj)->tr.rotation_euler.y += d_angle;
+      cam.tr.rotation_center = (obj)->tr.translation;
+      cam.tr.rotation_euler.y -= d_angle;
       break;
     case 'm':
-      (obj)->tr.rotation_center.y -= d_angle;
+      (obj)->tr.rotation_euler.y -= d_angle;
+      cam.tr.rotation_center = (obj)->tr.translation;
+      cam.tr.rotation_euler.y += d_angle;
       break;
 
+    case 'e':
+      cam.tr.translation.z -= dz;
+      break;
+    case 'd':
+      cam.tr.translation.z += dz;
+      break;
 
-    //case 's':
-    //  angle_view += d_angle;
-    //  break;
-    //case 'f':
-    //  angle_view -= d_angle;
-    //  break;
-//
-//
-    //case 'e':
-    //  transformation_view.translation.z += dz;
-    //  break;
-    //case 'd':
-    //  transformation_view.translation.z -= dz;
+    //case ' ' :
+    //  tirer_projectile();
     //  break;
   }
-  // Exemple camera troisieme personne :
-    //(obj+1)->rotation_center = vec3();
-    //vec3 target = obj.->translation + vec3(0.,-0.5,-2.);
-    //vec3 pos_camera = target - obj->tr.rotation * vec3(0., -3., 5.)  ;
-    //(obj+1)->tr.rotation = matrice_lookat(pos_camera, target, vec3(0., 1., 0.));
-    //(obj+1)->.tr.translation = extract_translation((obj+1)->tr.rotation);
+
+
+
+     //Exemple camera troisieme personne :
+     // mat4 rotation_cam = mat4(cam.tr.rotation_euler.x,0,0,0,
+     //                     0,cam.tr.rotation_euler.y,0,0,
+     //                     0,0,cam.tr.rotation_euler.z,0,
+     //                     0,0,0,1);
+     // mat4 rotation_obj = mat4((obj)->tr.rotation_euler.x,0,0,0,
+     //                     0,(obj)->tr.rotation_euler.y,0,0,
+     //                     0,0,(obj)->tr.rotation_euler.z,0,
+     //                     0,0,0,1);
+     // //cam.tr.rotation_center = vec3();
+     // vec3 target = (obj)->tr.translation + vec3(0.,-0.5,-2.);
+     // vec3 pos_camera = target - rotation_obj * vec3(0., -3., 5.)  ;
+     // rotation_cam = matrice_lookat(pos_camera, target, vec3(0., 1., 0.));
+     // cam.tr.translation = extract_translation(rotation_cam);
 }
 
 /*****************************************************************************\
@@ -132,17 +137,18 @@ static void special_callback(int key, int, int)
   switch (key)
   {
     case GLUT_KEY_UP:
-      (obj)->tr.translation.y += dL; //rotation avec la touche du haut
+      (obj)->tr.translation.z -= dL/2 * cos((obj)->tr.rotation_euler.y);
+      (obj)->tr.translation.x += dL/2 * sin((obj)->tr.rotation_euler.y);
+      cam.tr.translation.z -= dL/2 * cos(cam.tr.rotation_euler.y);
+      cam.tr.translation.x += dL/2 * sin(cam.tr.rotation_euler.y);
       break;
     case GLUT_KEY_DOWN:
-      (obj)->tr.translation.y -= dL; //rotation avec la touche du bas
+      (obj)->tr.translation.z += dL/2 * cos((obj)->tr.rotation_euler.x);
+      (obj)->tr.translation.x -= dL/2 * sin((obj)->tr.rotation_euler.y);
+      cam.tr.translation.z += dL/2 * cos(cam.tr.rotation_euler.x);
+      cam.tr.translation.x -= dL/2 * sin(cam.tr.rotation_euler.y); //rotation avec la touche du bas
       break;
-    case GLUT_KEY_LEFT:
-      (obj)->tr.translation.x -= dL; //rotation avec la touche de gauche
-      break;
-    case GLUT_KEY_RIGHT:
-      (obj)->tr.translation.x += dL; //rotation avec la touche de droite
-      break;
+    
   }
 }
 
@@ -333,7 +339,7 @@ GLuint upload_mesh_to_gpu(const mesh& m)
 void init_model_1()
 {
   // Chargement d'un maillage a partir d'un fichier
-  mesh m = load_obj_file("data/stegosaurus.obj");
+  mesh m = load_obj_file("data/Tiger.obj");
 
   // Affecte une transformation sur les sommets du maillage
   float s = 0.2f;
@@ -356,7 +362,9 @@ void init_model_1()
   obj[0].visible = true;
   obj[0].prog = shader_program_id;
 
-  obj[0].tr.translation = vec3(-2.0, 0.0, -10.0);
+  obj[0].tr.translation = vec3(0.0, 0.0, -2.0);
+
+  (obj)->tr.rotation_euler.y = 3.1415;
 }
 
 void init_model_2()
@@ -403,7 +411,7 @@ void init_model_2()
   obj[1].nb_triangle = 2;
   obj[1].vao = upload_mesh_to_gpu(m);
 
-  obj[1].texture_id = glhelper::load_texture("data/fond2.tga");
+  obj[1].texture_id = glhelper::load_texture("data/index.tga");
 
   obj[1].visible = true;
   obj[1].prog = shader_program_id;
@@ -413,17 +421,18 @@ void init_model_2()
 void init_model_3()
 {
   // Chargement d'un maillage a partir d'un fichier
-  mesh m = load_off_file("data/armadillo_light.off");
+  mesh m = load_obj_file("data/Tiger.obj");
 
-  // Affecte une transformation sur les sommets du maillage
-  float s = 0.01f;
+    // Affecte une transformation sur les sommets du maillage
+  float s = 0.2f;
   mat4 transform = mat4(   s, 0.0f, 0.0f, 0.0f,
-      0.0f,    s, 0.0f, 0.50f,
+      0.0f,    s, 0.0f, 0.0f,
       0.0f, 0.0f,   s , 0.0f,
       0.0f, 0.0f, 0.0f, 1.0f);
-  apply_deformation(&m,matrice_rotation(M_PI/2.0f,1.0f,0.0f,0.0f));
-  apply_deformation(&m,matrice_rotation(M_PI,0.0f,1.0f,0.0f));
   apply_deformation(&m,transform);
+
+  // Centre la rotation du modele 1 autour de son centre de gravite approximatif
+  obj[0].tr.rotation_center = vec3(0.0f,0.0f,0.0f);
 
   update_normals(&m);
   fill_color(&m,vec3(1.0f,1.0f,1.0f));
@@ -432,9 +441,31 @@ void init_model_3()
 
   obj[2].nb_triangle = m.connectivity.size();
   obj[2].texture_id = glhelper::load_texture("data/white.tga");
-
   obj[2].visible = true;
   obj[2].prog = shader_program_id;
 
   obj[2].tr.translation = vec3(2.0, 0.0, -10.0);
+
+  (obj)->tr.rotation_euler.y = 3.1415;
+
+
+}
+
+void init_projectile()
+{
+  mesh m = load_obj_file("data/projectile.obj");
+
+  (obj+3)->vao = upload_mesh_to_gpu(m);
+  (obj+3)->nb_triangle = m.connectivity.size();
+
+  (obj+3)->visible = false;
+  (obj+3)->prog = shader_program_id;
+
+  (obj+3)->tr.translation = vec3(2.0, 0.0, -10.0);
+  
+}
+
+void tirer_projectile()
+{
+
 }

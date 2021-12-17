@@ -6,6 +6,7 @@
  \*****************************************************************************/
 
 #include "declaration.h"
+#include <math.h>
 
 //identifiant des shaders
 GLuint shader_program_id;
@@ -18,6 +19,10 @@ objet3d obj[nb_obj];
 
 const int nb_text = 2;
 text text_to_draw[nb_text];
+
+const int rayon = 2;
+const float pi = M_PI;
+const float dist_cam_obj = sqrt(pow((float)((obj)->tr.translation.x - cam.tr.translation.x), 2.0) + pow((float)((obj)->tr.translation.z - cam.tr.translation.z), 2.0));
 
 /*****************************************************************************\
 * initialisation                                                              *
@@ -88,14 +93,24 @@ static void keyboard_callback(unsigned char key, int, int)
 
 
     case 'k':
-      (obj)->tr.rotation_euler.y += d_angle;
-      cam.tr.rotation_center = (obj)->tr.translation;
-      cam.tr.rotation_euler.y -= d_angle;
+      cam.tr.rotation_center = cam.tr.translation; //on fixe le centre de rotation de la camera sur sa position 
+      (obj)->tr.rotation_euler.y += d_angle; //la tank tourne d'un angle d_angle
+      cam.tr.rotation_euler.y -= d_angle; //la caméra fait de même
+      cam.tr.translation.z = (obj)->tr.translation.z + rayon;
+      cam.tr.translation.z -= rayon - rayon*cos((obj)->tr.rotation_euler.y - pi);
+      cam.tr.translation.x = (obj)->tr.translation.x;
+      cam.tr.translation.x += rayon*sin((obj)->tr.rotation_euler.y - pi);
+      cam.tr.rotation_center = cam.tr.translation;
       break;
-    case 'm':
+    case 'm':     
+      cam.tr.rotation_center = cam.tr.translation;
       (obj)->tr.rotation_euler.y -= d_angle;
-      cam.tr.rotation_center = (obj)->tr.translation;
       cam.tr.rotation_euler.y += d_angle;
+      cam.tr.translation.z = (obj)->tr.translation.z + rayon;
+      cam.tr.translation.z -= rayon - rayon*cos((obj)->tr.rotation_euler.y - pi);
+      cam.tr.translation.x = (obj)->tr.translation.x;
+      cam.tr.translation.x += rayon*sin((obj)->tr.rotation_euler.y - pi);
+      cam.tr.rotation_center = cam.tr.translation;
       break;
 
     case 'e':
@@ -133,20 +148,22 @@ static void keyboard_callback(unsigned char key, int, int)
 \*****************************************************************************/
 static void special_callback(int key, int, int)
 {
-  float dL=0.05f;
+  float dL=0.1f;
   switch (key)
   {
     case GLUT_KEY_UP:
-      (obj)->tr.translation.z -= dL/2 * cos((obj)->tr.rotation_euler.y);
-      (obj)->tr.translation.x += dL/2 * sin((obj)->tr.rotation_euler.y);
-      cam.tr.translation.z -= dL/2 * cos(cam.tr.rotation_euler.y);
-      cam.tr.translation.x += dL/2 * sin(cam.tr.rotation_euler.y);
+      (obj)->tr.translation.z -= dL * cos(cam.tr.rotation_euler.y);
+      cam.tr.translation.z -= dL * cos(cam.tr.rotation_euler.y);
+      (obj)->tr.translation.x += dL * sin(cam.tr.rotation_euler.y);
+      cam.tr.translation.x += dL * sin(cam.tr.rotation_euler.y);
+      cam.tr.rotation_center = cam.tr.translation;
       break;
     case GLUT_KEY_DOWN:
-      (obj)->tr.translation.z += dL/2 * cos((obj)->tr.rotation_euler.x);
-      (obj)->tr.translation.x -= dL/2 * sin((obj)->tr.rotation_euler.y);
-      cam.tr.translation.z += dL/2 * cos(cam.tr.rotation_euler.x);
-      cam.tr.translation.x -= dL/2 * sin(cam.tr.rotation_euler.y); //rotation avec la touche du bas
+      (obj)->tr.translation.z += dL * cos(cam.tr.rotation_euler.y);
+      cam.tr.translation.z += dL * cos(cam.tr.rotation_euler.y);
+      (obj)->tr.translation.x -= dL * sin(cam.tr.rotation_euler.y);
+      cam.tr.translation.x -= dL * sin(cam.tr.rotation_euler.y); 
+      cam.tr.rotation_center = cam.tr.translation;
       break;
     
   }
@@ -364,7 +381,7 @@ void init_model_1()
 
   obj[0].tr.translation = vec3(0.0, 0.0, -2.0);
 
-  (obj)->tr.rotation_euler.y = 3.1415;
+  obj[0].tr.rotation_euler.y = pi;
 }
 
 void init_model_2()
@@ -446,7 +463,6 @@ void init_model_3()
 
   obj[2].tr.translation = vec3(2.0, 0.0, -10.0);
 
-  (obj)->tr.rotation_euler.y = 3.1415;
 
 
 }

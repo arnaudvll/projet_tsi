@@ -4,7 +4,7 @@ out vec4 color;
 
 in vec2 vtex;
 
-uniform sampler2D texture;
+uniform sampler2D tex;
 uniform int c;
 
 void main (void)
@@ -22,7 +22,7 @@ void main (void)
 
   vec2 tex_coord = vec2(texture_x, texture_y) + vtex * vec2(x_tick, y_tick);
 
-  color = texture2D(texture, tex_coord);
+  color = texture(tex, tex_coord);
   if(length(color.xyz) < 0.01)
     discard;
 }
